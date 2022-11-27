@@ -34,10 +34,10 @@ app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
 pool
   .connect({
     host: "localhost",
-    port: 5432,
-    database: "daily-writing",
-    user: "alibayatpour",
-    password: "",
+    port: "5432",
+    database: "pomodoro",
+    user: "postgres",
+    password: "Mimi!1994",
   })
   .then(() => {
     app.listen(4200, () => {

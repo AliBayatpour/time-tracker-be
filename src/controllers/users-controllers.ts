@@ -18,7 +18,7 @@ export const signup: RequestHandler = async (req, res, next) => {
       new HttpError("Invalid inputs passed, please check your data", 422)
     );
   }
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
 
   let existingUser: IUser | null = null;
   // * CHECK IF USER EXISTS
@@ -37,12 +37,13 @@ export const signup: RequestHandler = async (req, res, next) => {
     return next(error);
   }
   let createdUser: IUser = {
-    id: "",
+    id: uuidv4(),
+    name,
     email,
     password: hashedPassword,
   };
 
-  if (req.body.email && req.body.password) {
+  if (email && password && name) {
     createdUser = (await UserRepo.insert(createdUser))[0];
   } else {
     const error = new HttpError("user info missing", 500);
@@ -74,10 +75,8 @@ export const login: RequestHandler = async (req, res, next) => {
 
   let existingUser: IUser | null = null;
 
-  // * CHECK IF USER EXISTS
   existingUser = (await UserRepo.findByEmail(email))[0];
 
-  // * * * * * * * * * * * * * CHECK IF USER EXISTS
   if (!existingUser) {
     const error = new HttpError(
       "Invalid credentials, could not log you in",

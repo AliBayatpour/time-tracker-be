@@ -1,6 +1,5 @@
 import { IItem } from "../interfaces/item.interface";
 import pool from "../pool";
-import { rowsParser } from "./utils/to-camel-case";
 
 class ItemRepo {
   static getItemByUserId = async (id: string) => {
@@ -16,55 +15,74 @@ class ItemRepo {
     } catch (err) {
       console.log(err);
     }
-    return rowsParser(result);
+    return result;
   };
-  static createItem = async (item: IItem) => {
+  static createItem = async (item: IItem, user_id: string) => {
     let result;
     try {
       const { rows } = await pool.query(
         `
-              INSERT INTO items (user_id, body) VALUES ($1, $2) RETURNING *;
+              INSERT INTO items (user_id, category, description, done, finished_at, goal, progress, sort) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;
             `,
-        [item.user_id, item.body]
+        [
+          user_id,
+          item.category,
+          item.description,
+          item.done,
+          item.finished_at,
+          item.goal,
+          item.progress,
+          item.sort,
+        ]
       );
       result = rows;
     } catch (error) {
       console.log(error);
     }
 
-    return rowsParser(result);
+    return result;
   };
 
-  static updateItem = async (item: IItem) => {
+  static updateItem = async (item: IItem, user_id: string) => {
     let result;
     try {
       const { rows } = await pool.query(
         `
-              UPDATE items SET body = $1 WHERE user_id = $2 AND id = $3  RETURNING *;
+              UPDATE items SET category = $1 AND description = $2 AND done = $3 AND finished_at = $4 AND goal = $5 AND progress = $6 AND sort = $7 WHERE user_id = $8 AND id = $9  RETURNING *;
             `,
-        [item.body, item.user_id, item.id]
+        [
+          item.category,
+          item.description,
+          item.done,
+          item.finished_at,
+          item.goal,
+          item.progress,
+          item.sort,
+          user_id,
+          item.id,
+        ]
       );
       result = rows;
     } catch (error) {
       console.log(error);
     }
-    return rowsParser(result);
+    return result;
   };
 
-  static deleteItem = async (item: IItem) => {
+  static deleteItem = async (id: string, user_id: string) => {
     let result;
     try {
       const { rows } = await pool.query(
         `
-              DELETE FROM items WHERE id = $1 AND user_id = $2   RETURNING *;
+              DELETE FROM items WHERE id = $1 AND user_id = $2 RETURNING *;
             `,
-        [item.id, item.user_id]
+        [id, user_id]
       );
       result = rows;
     } catch (error) {
       console.log(error);
     }
-    return rowsParser(result);
+    return result;
   };
 }
 

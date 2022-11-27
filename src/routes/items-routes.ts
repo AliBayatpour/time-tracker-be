@@ -1,8 +1,8 @@
 import { Router } from "express";
+import { check } from "express-validator";
 import {
   createItem,
   deleteItem,
-  getItemById,
   getItemsByUserId,
   updateItem,
 } from "../controllers/items-controllers";
@@ -12,10 +12,26 @@ const router = Router();
 
 router.use(checkAuth);
 
-router.get("/:itemid", getItemById);
 router.get("/", getItemsByUserId);
-router.post("/", [], createItem);
-router.put("/", [], updateItem);
+router.post(
+  "/",
+  [
+    check("category").notEmpty(),
+    check("description").notEmpty(),
+    check("goal").notEmpty(),
+    check("sort").notEmpty(),
+  ],
+  createItem
+);
+router.patch(
+  "/",
+  [
+    check("category").notEmpty(),
+    check("description").notEmpty(),
+    check("goal").notEmpty(),
+  ],
+  updateItem
+);
 router.delete("/", deleteItem);
 
 export default router;

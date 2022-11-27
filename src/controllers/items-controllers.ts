@@ -6,28 +6,12 @@ import { IItem } from "../interfaces/item.interface";
 import { IGetUserAuthInfoRequest } from "../interfaces/get-user-id-req.interface";
 import ItemRepo from "../repos/item-repo";
 
-export const getItemById: RequestHandler = async (req, res, next) => {
-  const itemId = req.params.id;
-
-  let item;
-  // * GET ITEM BY ID
-
-  // * * * * * * * * * * * * * GET ITEM BY ID
-  if (!item) {
-    return next(
-      new HttpError("Could not find a item for the provided id", 404)
-    );
-  }
-  res.json({ item });
-};
-
 export const getItemsByUserId: RequestHandler = async (
   req: IGetUserAuthInfoRequest,
   res: Response,
   next: NextFunction
 ) => {
   let items = [];
-  // * GET ITEMS BY USER_ID
   if (req.userId) {
     items = await ItemRepo.getItemByUserId(req.userId);
   } else {
@@ -36,7 +20,6 @@ export const getItemsByUserId: RequestHandler = async (
     );
   }
 
-  // * * * * * * * * * * * * * GET ITEMS BY USER_ID
   if (!items) {
     return next(
       new HttpError("Could not find items for the provided user id", 404)
@@ -51,21 +34,25 @@ export const createItem = async (
   next: NextFunction
 ) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
+  if (!errors.isEmpty() || !req.userId) {
     console.log(errors);
     return next(
       new HttpError("Invalid inputs passed, please check your data", 422)
     );
   }
-  const { body } = req.body;
+  const { category, description, sort, goal } = req.body;
   let item: IItem = {
     id: uuidv4(),
     user_id: !!req.userId ? req.userId : "",
-    body,
+    category,
+    description,
+    finished_at: 0,
+    sort,
+    done: false,
+    goal,
+    progress: 0,
   };
-  // * CREATE ITEM
-  item = (await ItemRepo.createItem(item))[0];
-  // * * * * * * * * * * * * * CREATE ITEM
+  item = (await ItemRepo.createItem(item, req.userId))[0];
   res.json({ item });
 };
 
@@ -75,24 +62,29 @@ export const updateItem = async (
   next: NextFunction
 ) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
+  if (!errors.isEmpty() || !req.userId) {
     console.log(errors);
     return next(
       new HttpError("Invalid inputs passed, please check your data", 422)
     );
   }
 
-  const { id, body } = req.body;
+  const { id, category, description, finished_at, sort, done, goal, progress } =
+    req.body;
 
   let item: IItem = {
     id: id,
     user_id: !!req.userId ? req.userId : "",
-    body,
+    category,
+    description,
+    finished_at,
+    sort,
+    done,
+    goal,
+    progress,
   };
 
-  // * UPDATE ITEM
-  item = (await ItemRepo.updateItem(item))[0];
-  // * * * * * * * * * * * * * UPDATE ITEM
+  item = (await ItemRepo.updateItem(item, req.userId))[0];
   res.json({ item });
 };
 
@@ -102,23 +94,16 @@ export const deleteItem = async (
   next: NextFunction
 ) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) {
+  if (!errors.isEmpty() || !req.userId) {
     console.log(errors);
     return next(
       new HttpError("Invalid inputs passed, please check your data", 422)
     );
   }
 
-  const { id, body } = req.body;
+  const { id } = req.body;
 
-  const item: IItem = {
-    id: id,
-    user_id: !!req.userId ? req.userId : "",
-    body,
-  };
-  // * DELETE ITEM
-  await ItemRepo.deleteItem(item);
+  await ItemRepo.deleteItem(id, req.userId);
 
-  // * * * * * * * * * * * * * DELETE ITEM
   res.status(200).json({ message: "Deleted item." });
 };
