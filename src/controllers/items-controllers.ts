@@ -83,7 +83,6 @@ export const updateItem = async (
     goal,
     progress,
   };
-
   item = (await ItemRepo.updateItem(item, req.userId))[0];
   res.json({ item });
 };

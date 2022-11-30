@@ -48,7 +48,7 @@ class ItemRepo {
     try {
       const { rows } = await pool.query(
         `
-              UPDATE items SET category = $1 AND description = $2 AND done = $3 AND finished_at = $4 AND goal = $5 AND progress = $6 AND sort = $7 WHERE user_id = $8 AND id = $9  RETURNING *;
+              UPDATE items SET category = $1, description = $2, done = $3, finished_at = $4, goal = $5, progress = $6, sort = $7 WHERE user_id = $8 AND id = $9 RETURNING *;
             `,
         [
           item.category,

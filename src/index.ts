@@ -10,7 +10,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: "http://localhost:4200",
+    origin: "*",
   })
 );
 app.get("/api/health", (req: Request, res: Response) => {
@@ -29,7 +29,7 @@ app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
     return next(error);
   }
   res.status(error.status || 500);
-  res.json({ message: error.message || "An unknown error occured" });
+  res.json({ message: error.message || "An unknown error ocurred" });
 });
 pool
   .connect({

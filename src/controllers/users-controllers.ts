@@ -10,6 +10,10 @@ import UserRepo from "../repos/user-repo";
 const JWT_KEY =
   "JLT&k2uu-J2y$dXbnC%PLkzuwQ8QSE689*DJ5oldc&8wdCQIsWczk6#A4Nnlmerg3LLdL8vvCD!2j&FoKF1#!pZmyKbBfqE*V5^wl7AeqW4KXG!jAbJ9ojksPp2mZRTk";
 
+const expiresInHour = 10000;
+const expiresInHourStr = expiresInHour + "h";
+const expiresInMili = expiresInHour * 60 * 60 * 1000;
+
 export const signup: RequestHandler = async (req, res, next) => {
   const errors = validationResult(req);
   console.log(errors);
@@ -55,7 +59,7 @@ export const signup: RequestHandler = async (req, res, next) => {
     token = jwt.sign(
       { sub: createdUser.id, email: createdUser.email },
       JWT_KEY,
-      { expiresIn: "1000h" }
+      { expiresIn: expiresInHourStr }
     );
   } catch (err) {
     const error = new HttpError("Sign up failed please try again later", 500);
@@ -63,10 +67,9 @@ export const signup: RequestHandler = async (req, res, next) => {
   }
 
   res.status(201).json({
-    id: createdUser.id,
-    email: createdUser.email,
-    token: token,
-    expiresIn: "1000h",
+    sub: createdUser.id,
+    access_token: token,
+    exp: expiresInMili,
   });
 };
 
@@ -113,7 +116,7 @@ export const login: RequestHandler = async (req, res, next) => {
     token = jwt.sign(
       { sub: existingUser.id, email: existingUser.email },
       JWT_KEY,
-      { expiresIn: "1000h" }
+      { expiresIn: expiresInHourStr }
     );
   } catch (err) {
     console.log(err);
@@ -122,9 +125,8 @@ export const login: RequestHandler = async (req, res, next) => {
   }
 
   res.status(201).json({
-    id: existingUser.id,
-    email: existingUser.email,
-    token: token,
-    expiresIn: "1000h",
+    sub: existingUser.id,
+    access_token: token,
+    exp: expiresInMili,
   });
 };
