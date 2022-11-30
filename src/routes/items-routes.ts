@@ -4,6 +4,7 @@ import {
   createItem,
   deleteItem,
   getItemsByUserId,
+  getLastNDaysItems,
   updateItem,
 } from "../controllers/items-controllers";
 import checkAuth from "../middlewares/check-auth";
@@ -13,6 +14,7 @@ const router = Router();
 router.use(checkAuth);
 
 router.get("/", getItemsByUserId);
+router.get("/last-n-days/:nday", getLastNDaysItems);
 router.post(
   "/",
   [

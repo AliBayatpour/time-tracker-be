@@ -13,7 +13,30 @@ export const getItemsByUserId: RequestHandler = async (
 ) => {
   let items = [];
   if (req.userId) {
-    items = await ItemRepo.getItemByUserId(req.userId);
+    items = await ItemRepo.getItemsByUserId(req.userId);
+  } else {
+    return next(
+      new HttpError("Could not find items for the provided user id", 404)
+    );
+  }
+
+  if (!items) {
+    return next(
+      new HttpError("Could not find items for the provided user id", 404)
+    );
+  }
+  res.json({ items });
+};
+
+export const getLastNDaysItems = async (
+  req: IGetUserAuthInfoRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  let items = [];
+  const nDaysAgo = +req.params.nday;
+  if (req.userId && typeof nDaysAgo === "number" && nDaysAgo) {
+    items = await ItemRepo.getLastNDaysItems(req.userId, nDaysAgo);
   } else {
     return next(
       new HttpError("Could not find items for the provided user id", 404)

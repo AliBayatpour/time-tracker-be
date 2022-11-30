@@ -2,14 +2,15 @@ import { IItem } from "../interfaces/item.interface";
 import pool from "../pool";
 
 class ItemRepo {
-  static getItemByUserId = async (id: string) => {
+  static getItemsByUserId = async (user_id: string) => {
     let result;
     try {
+      let todayTimeMidnight = new Date().setHours(0, 0, 0, 0);
       const { rows } = await pool.query(
         `
-              SELECT * FROM items WHERE user_id = $1;
+              SELECT * FROM items WHERE user_id = $1 AND done = $2 UNION SELECT * FROM items WHERE user_id = $3 AND done = $4 AND finished_at >= $5;
             `,
-        [id]
+        [user_id, false, user_id, true, todayTimeMidnight]
       );
       result = rows;
     } catch (err) {
@@ -17,6 +18,25 @@ class ItemRepo {
     }
     return result;
   };
+
+  static getLastNDaysItems = async (user_id: string, nDays: number) => {
+    let result;
+    try {
+      const todayTimeMidnight = new Date().setHours(0, 0, 0, 0);
+      const nDaysAgoTime = todayTimeMidnight - 3600000 * 24 * nDays;
+      const { rows } = await pool.query(
+        `
+        SELECT * FROM items WHERE user_id = $1 AND done = $2 AND finished_at >= $3 ORDER BY finished_at ASC;
+            `,
+        [user_id, true, nDaysAgoTime]
+      );
+      result = rows;
+    } catch (err) {
+      console.log(err);
+    }
+    return result;
+  };
+
   static createItem = async (item: IItem, user_id: string) => {
     let result;
     try {
@@ -48,7 +68,7 @@ class ItemRepo {
     try {
       const { rows } = await pool.query(
         `
-              UPDATE items SET category = $1, description = $2, done = $3, finished_at = $4, goal = $5, progress = $6, sort = $7 WHERE user_id = $8 AND id = $9 RETURNING *;
+              UPDATE items SET updated_at = CURRENT_TIMESTAMP, category = $1, description = $2, done = $3, finished_at = $4, goal = $5, progress = $6, sort = $7 WHERE user_id = $8 AND id = $9 RETURNING *;
             `,
         [
           item.category,
