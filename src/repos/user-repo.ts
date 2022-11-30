@@ -1,5 +1,6 @@
 import { IUser } from "../interfaces/user.interface";
 import pool from "../pool";
+import { rowsParser } from "./utils/to-camel-case";
 
 class UserRepo {
   static async findByEmail(email: string) {
@@ -15,7 +16,7 @@ class UserRepo {
     } catch (err) {
       console.log(err);
     }
-    return result;
+    return rowsParser(result);
   }
 
   static async insert(createdUser: IUser) {
@@ -31,7 +32,7 @@ class UserRepo {
     } catch (err) {
       console.log(err);
     }
-    return result;
+    return rowsParser(result);
   }
 }
 

@@ -2,10 +2,10 @@ import { IUser } from "./user.interface";
 
 export interface IItem {
   id: string;
-  user_id: IUser["id"];
+  userId: IUser["id"];
   category: string;
   description: string;
-  finished_at: number;
+  finishedAt: number;
   sort: string;
   done: boolean;
   goal: number;

@@ -1,8 +1,9 @@
 import { IItem } from "../interfaces/item.interface";
 import pool from "../pool";
+import { rowsParser } from "./utils/to-camel-case";
 
 class ItemRepo {
-  static getItemsByUserId = async (user_id: string) => {
+  static getItemsByUserId = async (userId: string) => {
     let result;
     try {
       let todayTimeMidnight = new Date().setHours(0, 0, 0, 0);
@@ -10,16 +11,16 @@ class ItemRepo {
         `
               SELECT * FROM items WHERE user_id = $1 AND done = $2 UNION SELECT * FROM items WHERE user_id = $3 AND done = $4 AND finished_at >= $5;
             `,
-        [user_id, false, user_id, true, todayTimeMidnight]
+        [userId, false, userId, true, todayTimeMidnight]
       );
       result = rows;
     } catch (err) {
       console.log(err);
     }
-    return result;
+    return rowsParser(result);
   };
 
-  static getLastNDaysItems = async (user_id: string, nDays: number) => {
+  static getLastNDaysItems = async (userId: string, nDays: number) => {
     let result;
     try {
       const todayTimeMidnight = new Date().setHours(0, 0, 0, 0);
@@ -28,16 +29,16 @@ class ItemRepo {
         `
         SELECT * FROM items WHERE user_id = $1 AND done = $2 AND finished_at >= $3 ORDER BY finished_at ASC;
             `,
-        [user_id, true, nDaysAgoTime]
+        [userId, true, nDaysAgoTime]
       );
       result = rows;
     } catch (err) {
       console.log(err);
     }
-    return result;
+    return rowsParser(result);
   };
 
-  static createItem = async (item: IItem, user_id: string) => {
+  static createItem = async (item: IItem, userId: string) => {
     let result;
     try {
       const { rows } = await pool.query(
@@ -45,11 +46,11 @@ class ItemRepo {
               INSERT INTO items (user_id, category, description, done, finished_at, goal, progress, sort) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *;
             `,
         [
-          user_id,
+          userId,
           item.category,
           item.description,
           item.done,
-          item.finished_at,
+          item.finishedAt,
           item.goal,
           item.progress,
           item.sort,
@@ -60,7 +61,7 @@ class ItemRepo {
       console.log(error);
     }
 
-    return result;
+    return rowsParser(result);
   };
 
   static updateItem = async (item: IItem, user_id: string) => {
@@ -74,7 +75,7 @@ class ItemRepo {
           item.category,
           item.description,
           item.done,
-          item.finished_at,
+          item.finishedAt,
           item.goal,
           item.progress,
           item.sort,
@@ -86,7 +87,7 @@ class ItemRepo {
     } catch (error) {
       console.log(error);
     }
-    return result;
+    return rowsParser(result);
   };
 
   static deleteItem = async (id: string, user_id: string) => {
@@ -102,7 +103,7 @@ class ItemRepo {
     } catch (error) {
       console.log(error);
     }
-    return result;
+    return rowsParser(result);
   };
 }
 

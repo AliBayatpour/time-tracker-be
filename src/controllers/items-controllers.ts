@@ -66,10 +66,10 @@ export const createItem = async (
   const { category, description, sort, goal } = req.body;
   let item: IItem = {
     id: uuidv4(),
-    user_id: !!req.userId ? req.userId : "",
+    userId: !!req.userId ? req.userId : "",
     category,
     description,
-    finished_at: 0,
+    finishedAt: 0,
     sort,
     done: false,
     goal,
@@ -92,15 +92,15 @@ export const updateItem = async (
     );
   }
 
-  const { id, category, description, finished_at, sort, done, goal, progress } =
+  const { id, category, description, finishedAt, sort, done, goal, progress } =
     req.body;
 
   let item: IItem = {
     id: id,
-    user_id: !!req.userId ? req.userId : "",
+    userId: !!req.userId ? req.userId : "",
     category,
     description,
-    finished_at,
+    finishedAt,
     sort,
     done,
     goal,
