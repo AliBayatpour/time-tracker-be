@@ -69,7 +69,7 @@ export const signup: RequestHandler = async (req, res, next) => {
   res.status(201).json({
     sub: createdUser.id,
     access_token: token,
-    exp: expiresInMili,
+    exp: expiresInMili + new Date().getTime(),
   });
 };
 
@@ -127,6 +127,6 @@ export const login: RequestHandler = async (req, res, next) => {
   res.status(201).json({
     sub: existingUser.id,
     access_token: token,
-    exp: expiresInMili,
+    exp: expiresInMili + new Date().getTime(),
   });
 };
