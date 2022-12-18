@@ -1,5 +1,6 @@
 import { IItem } from "../interfaces/item.interface";
 import pool from "../pool";
+import { groupCategorizeList } from "./utils/categorize-items";
 import { rowsParser } from "./utils/to-camel-case";
 
 class ItemRepo {
@@ -7,6 +8,7 @@ class ItemRepo {
     let result;
     try {
       let todayTimeMidnight = new Date().setHours(0, 0, 0, 0);
+
       const { rows } = await pool.query(
         `
               SELECT * FROM items WHERE user_id = $1 AND done = $2 UNION SELECT * FROM items WHERE user_id = $3 AND done = $4 AND finished_at >= $5;
@@ -31,11 +33,17 @@ class ItemRepo {
             `,
         [userId, true, nDaysAgoTime]
       );
-      result = rows;
+
+      result =
+        nDays <= 7
+          ? (rowsParser(rows) as IItem[])
+          : nDays <= 30
+          ? groupCategorizeList(rowsParser(rows), "week")
+          : groupCategorizeList(rowsParser(rows), "month");
     } catch (err) {
       console.log(err);
     }
-    return rowsParser(result);
+    return result;
   };
 
   static createItem = async (item: IItem, userId: string) => {

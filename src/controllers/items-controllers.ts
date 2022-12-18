@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IItem } from "../interfaces/item.interface";
 import { IGetUserAuthInfoRequest } from "../interfaces/get-user-id-req.interface";
 import ItemRepo from "../repos/item-repo";
+import { ICategorizedItem } from "../interfaces/categorized-item.interface";
 
 export const getItemsByUserId: RequestHandler = async (
   req: IGetUserAuthInfoRequest,
@@ -33,7 +34,11 @@ export const getLastNDaysItems = async (
   res: Response,
   next: NextFunction
 ) => {
-  let items = [];
+  let items:
+    | IItem[]
+    | [string, { [key: string]: number }][]
+    | [string, ICategorizedItem][]
+    | undefined;
   const nDaysAgo = +req.params.nday;
   if (req.userId && typeof nDaysAgo === "number" && nDaysAgo) {
     items = await ItemRepo.getLastNDaysItems(req.userId, nDaysAgo);
