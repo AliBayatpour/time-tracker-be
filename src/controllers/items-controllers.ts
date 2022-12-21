@@ -40,12 +40,15 @@ export const getLastNDaysItems = async (
     | [string, ICategorizedItem][]
     | undefined;
   const nDaysAgo = +req.params.nday;
-  if (req.userId && typeof nDaysAgo === "number" && nDaysAgo) {
+  if (
+    req.userId &&
+    typeof nDaysAgo === "number" &&
+    nDaysAgo &&
+    nDaysAgo < 380
+  ) {
     items = await ItemRepo.getLastNDaysItems(req.userId, nDaysAgo);
   } else {
-    return next(
-      new HttpError("Could not find items for the provided user id", 404)
-    );
+    return next(new HttpError("Invalid request", 400));
   }
 
   if (!items) {

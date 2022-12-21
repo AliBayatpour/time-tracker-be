@@ -1,3 +1,5 @@
+import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+dotenv.config();
 import cors from "cors";
 import express, { Request, Response, NextFunction } from "express";
 import HttpError from "./models/http-error";
@@ -31,16 +33,17 @@ app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
   res.status(error.status || 500);
   res.json({ message: error.message || "An unknown error ocurred" });
 });
+console.log(process.env.POSTGRES_HOST);
 pool
   .connect({
-    host: "localhost",
-    port: "5432",
-    database: "pomodoro",
-    user: "postgres",
-    password: "Mimi!1994",
+    host: process.env.POSTGRES_HOST,
+    port: process.env.POSTGRES_PORT,
+    database: process.env.POSTGRES_DB,
+    user: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
   })
   .then(() => {
-    app.listen(4200, () => {
+    app.listen(4001, () => {
       console.log(`Example app listening on port 4200`);
     });
   })
