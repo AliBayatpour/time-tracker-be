@@ -78,8 +78,8 @@ export const login: RequestHandler = async (req, res, next) => {
 
   let existingUser: IUser | null = null;
 
-  existingUser = (await UserRepo.findByEmail(email))[0];
-
+  const queryRes = await UserRepo.findByEmail(email);
+  existingUser = queryRes?.length && queryRes[0];
   if (!existingUser) {
     const error = new HttpError(
       "Invalid credentials, could not log you in",
@@ -97,7 +97,7 @@ export const login: RequestHandler = async (req, res, next) => {
   } catch (err) {
     console.log(err);
     const error = new HttpError(
-      "Could not log you in, please check your credentials and try agian.",
+      "Could not log you in, please check your credentials and try again.",
       500
     );
     return next(error);

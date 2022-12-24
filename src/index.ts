@@ -33,7 +33,6 @@ app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
   res.status(error.status || 500);
   res.json({ message: error.message || "An unknown error ocurred" });
 });
-console.log(process.env.POSTGRES_HOST);
 pool
   .connect({
     host: process.env.POSTGRES_HOST,
@@ -43,7 +42,7 @@ pool
     password: process.env.POSTGRES_PASSWORD,
   })
   .then(() => {
-    app.listen(4001, () => {
+    app.listen(4200, () => {
       console.log(`Example app listening on port 4200`);
     });
   })

@@ -1,3 +1,4 @@
+import moment from "moment";
 import { IItem } from "../interfaces/item.interface";
 import pool from "../pool";
 import { groupCategorizeList } from "./utils/categorize-items";
@@ -24,9 +25,18 @@ class ItemRepo {
 
   static getLastNDaysItems = async (userId: string, nDays: number) => {
     let result;
+    const nDaysAgo =
+      nDays <= 7
+        ? 7
+        : nDays <= 30
+        ? 30
+        : nDays <= 90
+        ? 12 * 7
+        : nDays <= 180
+        ? 180
+        : 360;
     try {
-      const todayTimeMidnight = new Date().setHours(0, 0, 0, 0);
-      const nDaysAgoTime = todayTimeMidnight - 3600000 * 24 * nDays;
+      const nDaysAgoTime = moment().subtract(nDaysAgo, "days").valueOf();
       const { rows } = await pool.query(
         `
         SELECT * FROM items WHERE user_id = $1 AND done = $2 AND finished_at >= $3 ORDER BY finished_at ASC;
@@ -36,10 +46,14 @@ class ItemRepo {
 
       result =
         nDays <= 7
-          ? (rowsParser(rows) as IItem[])
+          ? groupCategorizeList(rowsParser(rows), "day", 7)
           : nDays <= 30
-          ? groupCategorizeList(rowsParser(rows), "week")
-          : groupCategorizeList(rowsParser(rows), "month");
+          ? groupCategorizeList(rowsParser(rows), "day", 30)
+          : nDays <= 90
+          ? groupCategorizeList(rowsParser(rows), "week", 12)
+          : nDays <= 180
+          ? groupCategorizeList(rowsParser(rows), "month", 6)
+          : groupCategorizeList(rowsParser(rows), "month", 12);
     } catch (err) {
       console.log(err);
     }

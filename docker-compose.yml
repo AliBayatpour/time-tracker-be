@@ -1,0 +1,20 @@
+version: "3"
+services:
+  postgres-server:
+    image: "postgres"
+    ports:
+      - '4321:5432'
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+    restart: always
+  node-app:
+    build: .
+    ports:
+      - "4200:4200"
+    environment:
+      - POSTGRES_HOST=postgres-server
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123
