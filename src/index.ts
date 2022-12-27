@@ -6,6 +6,7 @@ import HttpError from "./models/http-error";
 import usersRoutes from "./routes/users-routes";
 import itemsRoutes from "./routes/items-routes";
 import pool from "./pool";
+import keys from "./keys";
 
 const app = express();
 app.use(express.json());
@@ -35,15 +36,15 @@ app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
 });
 pool
   .connect({
-    host: process.env.POSTGRES_HOST,
-    port: process.env.POSTGRES_PORT,
-    database: process.env.POSTGRES_DB,
-    user: process.env.POSTGRES_USER,
-    password: process.env.POSTGRES_PASSWORD,
+    host: keys.pgHost,
+    port: keys.pgPort,
+    database: keys.pgDb,
+    user: keys.pgUser,
+    password: keys.pgPass,
   })
   .then(() => {
-    app.listen(4200, () => {
-      console.log(`Example app listening on port 4200`);
+    app.listen(keys.port, () => {
+      console.log(`Example app listening on port ${keys.port}`);
     });
   })
   .catch((err: Error) => console.log(err));

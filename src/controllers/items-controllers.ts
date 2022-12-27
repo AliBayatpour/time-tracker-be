@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 import { IItem } from "../interfaces/item.interface";
 import { IGetUserAuthInfoRequest } from "../interfaces/get-user-id-req.interface";
 import ItemRepo from "../repos/item-repo";
+import ItemService from "../services/items-services";
+import { ICategory } from "../interfaces/category.interface";
 
 export const getItemsByUserId: RequestHandler = async (
   req: IGetUserAuthInfoRequest,
@@ -35,7 +37,7 @@ export const getLastNDaysItems = async (
 ) => {
   let result:
     | IItem[]
-    | { stat: [string, { [key: string]: number }][]; categories: string[] }
+    | { stat: [string, { [key: string]: number }][]; categories: ICategory }
     | undefined;
   const nDaysAgo = +req.params.nday;
   if (
@@ -44,7 +46,7 @@ export const getLastNDaysItems = async (
     nDaysAgo &&
     nDaysAgo < 380
   ) {
-    result = await ItemRepo.getLastNDaysItems(req.userId, nDaysAgo);
+    result = await ItemService.getLastNDaysItems(req.userId, nDaysAgo);
   } else {
     return next(new HttpError("Invalid request", 400));
   }

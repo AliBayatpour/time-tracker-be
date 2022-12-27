@@ -43,17 +43,7 @@ class ItemRepo {
             `,
         [userId, true, nDaysAgoTime]
       );
-
-      result =
-        nDays <= 7
-          ? groupCategorizeList(rowsParser(rows), "day", 7)
-          : nDays <= 30
-          ? groupCategorizeList(rowsParser(rows), "day", 30)
-          : nDays <= 90
-          ? groupCategorizeList(rowsParser(rows), "week", 12)
-          : nDays <= 180
-          ? groupCategorizeList(rowsParser(rows), "month", 6)
-          : groupCategorizeList(rowsParser(rows), "month", 12);
+      result = rows;
     } catch (err) {
       console.log(err);
     }

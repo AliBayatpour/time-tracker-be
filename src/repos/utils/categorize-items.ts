@@ -1,6 +1,30 @@
 import moment, { Moment } from "moment";
 import { ICategorizedItem } from "../../interfaces/categorized-item.interface";
+import { ICategory } from "../../interfaces/category.interface";
 import { IItem } from "../../interfaces/item.interface";
+
+export const colorList = [
+  "#E6C229",
+  "#D11149",
+  "#F17105",
+  "#59D102",
+  "#FF00CC",
+  "#463DE3",
+  "#961A7D",
+  "#46E327",
+  "#201A96",
+  "#961A3E",
+  "#E33DC2",
+  "#1A9689",
+  "#E6B1E2",
+  "#E3BD27",
+  "#418499",
+  "#27B7E3",
+];
+
+export const randomColorGenerator = (): string => {
+  return "#" + Math.floor(Math.random() * 16777215).toString(16);
+};
 
 const dailyKeyGenerator = (dateTime: Moment | number | Date) =>
   `${moment(dateTime).year()}-${moment(dateTime).month() + 1}-${moment(
@@ -14,44 +38,34 @@ const groupDaily = (list: IItem[], limit: number) => {
     const day = dailyKeyGenerator(moment().subtract(index, "days"));
     initial[day] = [];
   }
-  const categories: string[] = [];
-  const stat = list.reduce((acc: { [key: string]: IItem[] }, item) => {
+  const categories: ICategory = {};
+  let total = 0;
+
+  const stat = list.reduce((acc: { [key: string]: IItem[] }, item, index) => {
     const groupKey = dailyKeyGenerator(+item.finishedAt);
-    if (!categories.includes(item.category)) {
-      categories.push(item.category);
+    if (!categories[item.category]) {
+      categories[item.category] = {
+        total: item.progress,
+        color:
+          index > colorList.length - 1
+            ? randomColorGenerator()
+            : colorList[index],
+      };
+    } else {
+      categories[item.category] = {
+        ...categories[item.category],
+        total: categories[item.category].total + item.progress,
+      };
     }
+
+    total = total + item.progress;
     if (!acc[groupKey]) {
       acc[groupKey] = [];
     }
     acc[groupKey].push(item);
     return acc;
   }, initial);
-  return { stat, categories };
-};
-
-const weeklyKeyGenerator = (dateTime: Moment | number | Date) =>
-  `${moment(dateTime).year()}-${moment(dateTime).week()}`;
-
-// weekly group
-const groupWeekly = (list: IItem[], limit: number) => {
-  const initial: { [key: string]: IItem[] } = {};
-  for (let index = 0; index < limit; index++) {
-    const day = weeklyKeyGenerator(moment().subtract(index, "weeks"));
-    initial[day] = [];
-  }
-  const categories: string[] = [];
-  const stat = list.reduce((acc: { [key: string]: IItem[] }, item) => {
-    const groupKey = weeklyKeyGenerator(+item.finishedAt);
-    if (!categories.includes(item.category)) {
-      categories.push(item.category);
-    }
-    if (!acc[groupKey]) {
-      acc[groupKey] = [];
-    }
-    acc[groupKey].push(item);
-    return acc;
-  }, initial);
-  return { stat, categories };
+  return { stat, categories, total };
 };
 
 const monthlyKeyGenerator = (dateTime: Moment | number | Date) =>
@@ -64,19 +78,34 @@ const groupMonthly = (list: IItem[], limit: number) => {
     const day = monthlyKeyGenerator(moment().subtract(index, "months"));
     initial[day] = [];
   }
-  const categories: string[] = [];
-  const stat = list.reduce((acc: { [key: string]: IItem[] }, item) => {
+  const categories: ICategory = {};
+  let total = 0;
+
+  const stat = list.reduce((acc: { [key: string]: IItem[] }, item, index) => {
     const groupKey = monthlyKeyGenerator(+item.finishedAt);
-    if (!categories.includes(item.category)) {
-      categories.push(item.category);
+    if (!categories[item.category]) {
+      categories[item.category] = {
+        total: item.progress,
+        color:
+          index > colorList.length - 1
+            ? randomColorGenerator()
+            : colorList[index],
+      };
+    } else {
+      categories[item.category] = {
+        ...categories[item.category],
+        total: categories[item.category].total + item.progress,
+      };
     }
+
+    total = total + item.progress;
     if (!acc[groupKey]) {
       acc[groupKey] = [];
     }
     acc[groupKey].push(item);
     return acc;
   }, initial);
-  return { stat, categories };
+  return { stat, categories, total };
 };
 
 const categorizeGroups = (arr: IItem[]) => {
@@ -94,14 +123,12 @@ const categorizeGroups = (arr: IItem[]) => {
 
 export const groupCategorizeList = (
   listOfItems: IItem[],
-  categoryKey: "week" | "month" | "day",
+  categoryKey: "month" | "day",
   limit: number
 ) => {
   const groupedData =
     categoryKey === "day"
       ? groupDaily(listOfItems, limit)
-      : categoryKey === "week"
-      ? groupWeekly(listOfItems, limit)
       : groupMonthly(listOfItems, limit);
   const categorizedGroup: ICategorizedItem = {};
   Object.entries(groupedData.stat).forEach((groupArr) => {
@@ -110,5 +137,6 @@ export const groupCategorizeList = (
   return {
     stat: Object.entries(categorizedGroup).reverse(),
     categories: groupedData.categories,
+    total: groupedData.total,
   };
 };
