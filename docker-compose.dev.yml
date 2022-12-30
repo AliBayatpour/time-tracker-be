@@ -2,27 +2,29 @@ version: "3"
 services:
   postgres-server:
     image: "postgres"
-    container_name: time-tracker-db
+    container_name: time-tracker-db-dev
     ports:
-      - "4321:5432"
+      - "6543:5432"
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
   node-app:
-    container_name: time-tracker-be
+    container_name: time-tracker-be-dev
     depends_on:
       - postgres-server
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
       context: .
+    volumes:
+      - ./:/app
     ports:
-      - "4200:4200"
+      - 4100:4100
     environment:
       - POSTGRES_HOST=postgres-server
       - POSTGRES_PORT=5432
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=123
-      - PORT=4200
+      - PORT=4100
   migration:
     build:
       context: .
