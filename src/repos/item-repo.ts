@@ -25,6 +25,7 @@ class ItemRepo {
 
   static getLastNDaysItems = async (userId: string, nDays: number) => {
     let result;
+    let todayTimeMidnight = new Date().setHours(0, 0, 0, 0);
     const nDaysAgo =
       nDays <= 7
         ? 7
@@ -39,9 +40,9 @@ class ItemRepo {
       const nDaysAgoTime = moment().subtract(nDaysAgo, "days").valueOf();
       const { rows } = await pool.query(
         `
-        SELECT * FROM items WHERE user_id = $1 AND done = $2 AND finished_at >= $3 ORDER BY finished_at ASC;
+        SELECT * FROM items WHERE user_id = $1 AND done = $2 AND finished_at >= $3 AND finished_at < $4 ORDER BY finished_at ASC;
             `,
-        [userId, true, nDaysAgoTime]
+        [userId, true, nDaysAgoTime, todayTimeMidnight]
       );
       result = rows;
     } catch (err) {

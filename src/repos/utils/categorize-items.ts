@@ -34,7 +34,7 @@ const dailyKeyGenerator = (dateTime: Moment | number | Date) =>
 // daily group
 const groupDaily = (list: IItem[], limit: number) => {
   const initial: { [key: string]: IItem[] } = {};
-  for (let index = 0; index < limit; index++) {
+  for (let index = 1; index <= limit; index++) {
     const day = dailyKeyGenerator(moment().subtract(index, "days"));
     initial[day] = [];
   }
@@ -75,8 +75,8 @@ const monthlyKeyGenerator = (dateTime: Moment | number | Date) =>
 const groupMonthly = (list: IItem[], limit: number) => {
   const initial: { [key: string]: IItem[] } = {};
   for (let index = 0; index < limit; index++) {
-    const day = monthlyKeyGenerator(moment().subtract(index, "months"));
-    initial[day] = [];
+    const month = monthlyKeyGenerator(moment().subtract(index, "months"));
+    initial[month] = [];
   }
   const categories: ICategory = {};
   let total = 0;
