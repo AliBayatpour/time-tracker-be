@@ -1,6 +1,6 @@
 import moment from "moment-timezone";
 import { IItem } from "../interfaces/item.interface";
-import { TimezoneItem } from "../interfaces/tiemzoneItem.interface";
+import { TimezoneItem } from "../interfaces/timezone-item.interface";
 import pool from "../pool";
 import { rowsParser } from "./utils/to-camel-case";
 
