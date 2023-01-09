@@ -57,6 +57,7 @@ class ItemRepo {
       const timezone = await this.getUserTimezone(userId);
       const nDaysAgoTime = moment
         .tz(timezone)
+        .startOf("day")
         .subtract(nDaysAgo, "days")
         .valueOf();
       const { rows } = await pool.query(
