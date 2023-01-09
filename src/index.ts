@@ -7,6 +7,8 @@ import usersRoutes from "./routes/users-routes";
 import itemsRoutes from "./routes/items-routes";
 import pool from "./pool";
 import keys from "./keys";
+import corn from "node-cron";
+import ItemRepo from "./repos/item-repo";
 
 const app = express();
 app.use(express.json());
@@ -34,14 +36,13 @@ app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
   res.status(error.status || 500);
   res.json({ message: error.message || "An unknown error ocurred" });
 });
+
+corn.schedule("*/1 * * * *", () => {
+  ItemRepo.transferDoneItems();
+});
+
 pool
-  .connect({
-    host: keys.pgHost,
-    port: keys.pgPort,
-    database: keys.pgDb,
-    user: keys.pgUser,
-    password: keys.pgPass,
-  })
+  .connect()
   .then(() => {
     app.listen(keys.port, () => {
       console.log(`Example app listening on port ${keys.port}`);

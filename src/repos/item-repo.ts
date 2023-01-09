@@ -1,15 +1,15 @@
-import moment from "moment";
+import moment from "moment-timezone";
 import { IItem } from "../interfaces/item.interface";
+import { TimezoneItem } from "../interfaces/tiemzoneItem.interface";
 import pool from "../pool";
-import { groupCategorizeList } from "./utils/categorize-items";
 import { rowsParser } from "./utils/to-camel-case";
 
 class ItemRepo {
   static getItemsByUserId = async (userId: string) => {
     let result;
     try {
-      let todayTimeMidnight = new Date().setHours(0, 0, 0, 0);
-
+      const timezone = await this.getUserTimezone(userId);
+      let todayTimeMidnight = moment.tz(timezone).startOf("day").valueOf();
       const { rows } = await pool.query(
         `
               SELECT * FROM items WHERE user_id = $1 AND done = $2 UNION SELECT * FROM items WHERE user_id = $3 AND done = $4 AND finished_at >= $5;
@@ -23,9 +23,26 @@ class ItemRepo {
     return rowsParser(result);
   };
 
+  static getAllDoneItems = async () => {
+    let result = [];
+    try {
+      const { rows } = await pool.query(
+        `
+              SELECT items.*, timezone FROM items JOIN users ON items.user_id = users.id WHERE done = $1;
+            `,
+        [true]
+      );
+      result = rows;
+    } catch (err) {
+      console.log(err);
+    }
+    return rowsParser(result) as TimezoneItem[];
+  };
+
   static getLastNDaysItems = async (userId: string, nDays: number) => {
     let result;
-    let todayTimeMidnight = new Date().setHours(0, 0, 0, 0);
+    const timezone = await this.getUserTimezone(userId);
+    let todayTimeMidnight = moment.tz(timezone).startOf("day").valueOf();
     const nDaysAgo =
       nDays <= 7
         ? 7
@@ -37,10 +54,14 @@ class ItemRepo {
         ? 180
         : 360;
     try {
-      const nDaysAgoTime = moment().subtract(nDaysAgo, "days").valueOf();
+      const timezone = await this.getUserTimezone(userId);
+      const nDaysAgoTime = moment
+        .tz(timezone)
+        .subtract(nDaysAgo, "days")
+        .valueOf();
       const { rows } = await pool.query(
         `
-        SELECT * FROM items WHERE user_id = $1 AND done = $2 AND finished_at >= $3 AND finished_at < $4 ORDER BY finished_at ASC;
+        SELECT * FROM done_items WHERE user_id = $1 AND done = $2 AND finished_at >= $3 AND finished_at < $4 ORDER BY finished_at ASC;
             `,
         [userId, true, nDaysAgoTime, todayTimeMidnight]
       );
@@ -117,6 +138,58 @@ class ItemRepo {
       console.log(error);
     }
     return rowsParser(result);
+  };
+
+  static transferDoneItems = async () => {
+    const doneItems = await this.getAllDoneItems();
+    doneItems?.forEach(async (item) => {
+      let todayTimeMidnight = moment.tz(item.timezone).startOf("day").valueOf();
+
+      if (item.finishedAt > todayTimeMidnight) {
+        return;
+      }
+      const client = await pool.newPool().connect();
+      try {
+        await client.query("BEGIN");
+        await pool.query(
+          `
+              INSERT INTO done_items (id, user_id, created_at, updated_at, category, description, done, finished_at, goal, progress, sort) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
+            `,
+          [
+            item.id,
+            item.userId,
+            item.createdAt,
+            item.updatedAt,
+            item.category,
+            item.description,
+            item.done,
+            item.finishedAt,
+            item.goal,
+            item.progress,
+            item.sort,
+          ]
+        );
+        await pool.query(
+          `
+        DELETE FROM items WHERE id = $1;
+        `,
+          [item.id]
+        );
+        await client.query("COMMIT");
+      } catch (error) {
+        console.log(error);
+        await client.query("ROLLBACK");
+      } finally {
+        client.release();
+      }
+    });
+  };
+  static getUserTimezone = async (userId: IItem["userId"]) => {
+    const { rows } = await pool.query(
+      `SELECT timezone FROM users WHERE id = $1`,
+      [userId]
+    );
+    return rows[0]?.timezone;
   };
 }
 

@@ -22,12 +22,11 @@ export const signup: RequestHandler = async (req, res, next) => {
       new HttpError("Invalid inputs passed, please check your data", 422)
     );
   }
-  const { name, email, password } = req.body;
+  const { name, email, password, timezone } = req.body;
 
   let existingUser: IUser | null = null;
-  // * CHECK IF USER EXISTS
   existingUser = (await UserRepo.findByEmail(email))[0];
-  // * * * * * * * * * * * * * CHECK IF USER EXISTS
+
   if (existingUser) {
     const error = new HttpError("This user already exists", 422);
     return next(error);
@@ -44,10 +43,11 @@ export const signup: RequestHandler = async (req, res, next) => {
     id: uuidv4(),
     name,
     email,
+    timezone,
     password: hashedPassword,
   };
 
-  if (email && password && name) {
+  if (email && password && name && timezone) {
     createdUser = (await UserRepo.insert(createdUser))[0];
   } else {
     const error = new HttpError("user info missing", 500);
@@ -69,6 +69,7 @@ export const signup: RequestHandler = async (req, res, next) => {
   res.status(201).json({
     sub: createdUser.id,
     access_token: token,
+    timezone,
     exp: expiresInMili + new Date().getTime(),
   });
 };
@@ -105,7 +106,7 @@ export const login: RequestHandler = async (req, res, next) => {
 
   if (!isValidPassword) {
     const error = new HttpError(
-      "Could not log you in, please check your credentials and try agian.",
+      "Could not log you in, please check your credentials and try again.",
       500
     );
     return next(error);
@@ -126,6 +127,7 @@ export const login: RequestHandler = async (req, res, next) => {
 
   res.status(201).json({
     sub: existingUser.id,
+    timezone: existingUser.timezone,
     access_token: token,
     exp: expiresInMili + new Date().getTime(),
   });

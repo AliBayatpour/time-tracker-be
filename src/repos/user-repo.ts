@@ -24,9 +24,14 @@ class UserRepo {
     try {
       const { rows } = await pool.query(
         `
-        INSERT INTO users (name, email, password) VALUES ($1, $2, $3)  RETURNING *;
+        INSERT INTO users (name, email, password, timezone) VALUES ($1, $2, $3, $4)  RETURNING *;
       `,
-        [createdUser.name, createdUser.email, createdUser.password]
+        [
+          createdUser.name,
+          createdUser.email,
+          createdUser.password,
+          createdUser.timezone,
+        ]
       );
       result = rows;
     } catch (err) {

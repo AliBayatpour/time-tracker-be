@@ -1,4 +1,4 @@
-import moment, { Moment } from "moment";
+import moment, { Moment } from "moment-timezone";
 import { ICategorizedItem } from "../../interfaces/categorized-item.interface";
 import { ICategory } from "../../interfaces/category.interface";
 import { IItem } from "../../interfaces/item.interface";
@@ -26,23 +26,29 @@ export const randomColorGenerator = (): string => {
   return "#" + Math.floor(Math.random() * 16777215).toString(16);
 };
 
-const dailyKeyGenerator = (dateTime: Moment | number | Date) =>
-  `${moment(dateTime).year()}-${moment(dateTime).month() + 1}-${moment(
-    dateTime
-  ).date()}`;
+const dailyKeyGenerator = (
+  dateTime: Moment | number | Date,
+  timezone: string
+) =>
+  `${moment.tz(dateTime, timezone).year()}-${
+    moment.tz(dateTime, timezone).month() + 1
+  }-${moment.tz(dateTime, timezone).date()}`;
 
 // daily group
-const groupDaily = (list: IItem[], limit: number) => {
+const groupDaily = (list: IItem[], limit: number, timezone: string) => {
   const initial: { [key: string]: IItem[] } = {};
   for (let index = 1; index <= limit; index++) {
-    const day = dailyKeyGenerator(moment().subtract(index, "days"));
+    const day = dailyKeyGenerator(
+      moment.tz(timezone).subtract(index, "days"),
+      timezone
+    );
     initial[day] = [];
   }
   const categories: ICategory = {};
   let total = 0;
 
   const stat = list.reduce((acc: { [key: string]: IItem[] }, item, index) => {
-    const groupKey = dailyKeyGenerator(+item.finishedAt);
+    const groupKey = dailyKeyGenerator(+item.finishedAt, timezone);
     if (!categories[item.category]) {
       categories[item.category] = {
         total: item.progress,
@@ -68,21 +74,29 @@ const groupDaily = (list: IItem[], limit: number) => {
   return { stat, categories, total };
 };
 
-const monthlyKeyGenerator = (dateTime: Moment | number | Date) =>
-  `${moment(dateTime).year()}-${moment(dateTime).month() + 1}`;
+const monthlyKeyGenerator = (
+  dateTime: Moment | number | Date,
+  timezone: string
+) =>
+  `${moment.tz(dateTime, timezone).year()}-${
+    moment.tz(dateTime, timezone).month() + 1
+  }`;
 
 // monthly group
-const groupMonthly = (list: IItem[], limit: number) => {
+const groupMonthly = (list: IItem[], limit: number, timezone: string) => {
   const initial: { [key: string]: IItem[] } = {};
   for (let index = 0; index < limit; index++) {
-    const month = monthlyKeyGenerator(moment().subtract(index, "months"));
+    const month = monthlyKeyGenerator(
+      moment.tz(timezone).subtract(index, "months"),
+      timezone
+    );
     initial[month] = [];
   }
   const categories: ICategory = {};
   let total = 0;
 
   const stat = list.reduce((acc: { [key: string]: IItem[] }, item, index) => {
-    const groupKey = monthlyKeyGenerator(+item.finishedAt);
+    const groupKey = monthlyKeyGenerator(+item.finishedAt, timezone);
     if (!categories[item.category]) {
       categories[item.category] = {
         total: item.progress,
@@ -124,12 +138,13 @@ const categorizeGroups = (arr: IItem[]) => {
 export const groupCategorizeList = (
   listOfItems: IItem[],
   categoryKey: "month" | "day",
-  limit: number
+  limit: number,
+  timezone: string
 ) => {
   const groupedData =
     categoryKey === "day"
-      ? groupDaily(listOfItems, limit)
-      : groupMonthly(listOfItems, limit);
+      ? groupDaily(listOfItems, limit, timezone)
+      : groupMonthly(listOfItems, limit, timezone);
   const categorizedGroup: ICategorizedItem = {};
   Object.entries(groupedData.stat).forEach((groupArr) => {
     categorizedGroup[groupArr[0]] = categorizeGroups(groupArr[1]);
